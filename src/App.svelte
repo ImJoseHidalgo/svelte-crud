@@ -1,4 +1,9 @@
 <script>
+  import {v4} from 'uuid';
+  import Noty from 'noty';
+  import 'noty/lib/noty.css';
+  import 'noty/lib/themes/sunset.css'
+
   let products = [
     {
       id: 1,
@@ -20,6 +25,7 @@
     category: '',
     imageURL: ''
   }
+  let editStatus = false;
   const cleanProduct = () =>{
     product = {
       id: '',
@@ -30,10 +36,9 @@
     }
   }
 
-  const onSubmintHandler = e => {
-    e.preventDefault();
+  const addProduct = () => {
     const newProduct = {
-      id: product.length,
+      id: v4(),
       name: product.name,
       description: product.description,
       category: product.category,
@@ -42,6 +47,41 @@
     products = products.concat(newProduct);
     cleanProduct();
     console.log(products)
+  };
+
+  const updateProduct = () => {
+    let updatedProduct = {
+      name: product.name,
+      description: product.description,
+      id: product.id,
+      imageURL: product.imageURL,
+      category: product.category
+    }
+    const productIndex = products.findIndex(p => p.id == product.id)
+    products[productIndex] = updatedProduct;
+    cleanProduct();
+    editStatus = false;
+    new Noty ({
+      theme: 'sunset',
+      type: 'success',
+      timeout: 3000,
+      text: 'Card Actualizado Padre'
+    }).show();
+  }
+  const onSubmintHandler = e => {
+    if(!editStatus) {
+      addProduct();
+    } else {
+      updateProduct();
+    }
+  };
+
+  const deleteProduct = (id) => {
+    products = products.filter(product => product.id != id);
+  }
+  const editProduct = productEdited => {
+    product = productEdited;
+    editStatus = true;
   }
 </script>
 
@@ -71,8 +111,14 @@
                   </span>
                 </h5>
                 <p class="card-text">{product.description}</p>
-                <button class="btn btn-danger">Delete</button>
-                <button class="btn btn-secondary">Edit</button>
+                <button
+                  class="btn btn-danger"
+                  on:click={deleteProduct(product.id)}>
+                  Delete</button>
+                <button
+                  class="btn btn-secondary"
+                  on:click={editProduct(product)}>
+                  Edit</button>
               </div>
             </div>
           </div>
@@ -82,7 +128,7 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-body">
-            <form on:submit={onSubmintHandler}>
+            <form on:submit|preventDefault={onSubmintHandler}>
               <div class="form-group">
                 <input class="form-control" bind:value={product.name} type="text" placeholder="Product Name" />
               </div>
@@ -109,7 +155,13 @@
                   <option value="servers">Servers</option>
                 </select>
               </div>
-              <button class="btn btn-secondary">Save Product</button>
+              <button class="btn btn-secondary">
+                {#if !editStatus}
+                  Save Product
+                  {:else}
+                    Update Product
+                {/if}
+              </button>
             </form>
           </div>
         </div>
